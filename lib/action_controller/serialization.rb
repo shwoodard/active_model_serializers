@@ -63,9 +63,9 @@ module ActionController
       @namespace_for_serializer ||= self.class.parent unless self.class.parent == Object
     end
 
-    def default_serializer(resource)
-      options = {}.tap do |o|
-        o[:namespace] = namespace_for_serializer if namespace_for_serializer
+    def default_serializer(resource, options)
+      unless options[:namespace]
+        options.update(namespace: namespace_for_serializer) if namespace_for_serializer
       end
 
       ActiveModel::Serializer.serializer_for(resource, options)
@@ -84,11 +84,11 @@ module ActionController
       options = default_serializer_options.merge(options)
       @namespace_for_serializer = options.fetch(:namespace, nil)
 
-      if serializer = options.fetch(:serializer, default_serializer(resource))
+      if serializer = options.fetch(:serializer, default_serializer(resource, options))
         options[:scope] = serialization_scope unless options.has_key?(:scope)
 
         if resource.respond_to?(:each)
-          options[:resource_name] = controller_name 
+          options[:resource_name] = controller_name
           options[:namespace] = namespace_for_serializer if namespace_for_serializer
         end
 
